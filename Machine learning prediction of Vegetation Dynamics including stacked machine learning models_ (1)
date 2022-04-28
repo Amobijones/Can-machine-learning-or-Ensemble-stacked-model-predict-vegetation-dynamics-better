@@ -1,0 +1,523 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "fa9b291d",
+   "metadata": {},
+   "source": [
+    "Arthur: Amobichukwu Amanambu\n",
+    "Objective: Using environmental variables to predict vegetation dynamic (in form of Hurst exponent) with machine leraning. The feature data include, Digital elevation model, rainfall, distance from road, distance from stream etc. Note the Hurst exponent was calculated using NDVI from about 30 years. with the Hurst exponent model. the Hurst exponent procedure was not shown here. However, this project tries to investigate how different machine learning models can best predict Hurst exponent and whether an ensemble model can do a better job. It appears that even simple model can predict better result than the stacked model in this project"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "711f09da",
+   "metadata": {},
+   "source": [
+    "# Machine learning compare"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "424b3a46",
+   "metadata": {},
+   "source": [
+    "# Import initial needed library"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "cbb6c710",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import pandas as pd"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1ce7f33a",
+   "metadata": {},
+   "source": [
+    "# Import the environmental dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "c256d1a1",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>OID_</th>\n",
+       "      <th>X</th>\n",
+       "      <th>Y</th>\n",
+       "      <th>Hurst</th>\n",
+       "      <th>TWI</th>\n",
+       "      <th>TPI300</th>\n",
+       "      <th>TPI50</th>\n",
+       "      <th>SPI</th>\n",
+       "      <th>Slope</th>\n",
+       "      <th>NS</th>\n",
+       "      <th>DD</th>\n",
+       "      <th>EW</th>\n",
+       "      <th>Elv</th>\n",
+       "      <th>pr</th>\n",
+       "      <th>co</th>\n",
+       "      <th>no2</th>\n",
+       "      <th>o3</th>\n",
+       "      <th>pm10</th>\n",
+       "      <th>so2</th>\n",
+       "      <th>Hurtz</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>39</td>\n",
+       "      <td>93965.4461</td>\n",
+       "      <td>3295461.117</td>\n",
+       "      <td>0.658765</td>\n",
+       "      <td>5.938030</td>\n",
+       "      <td>2.100799</td>\n",
+       "      <td>1.687004</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>4.363049</td>\n",
+       "      <td>-0.140835</td>\n",
+       "      <td>0.317881</td>\n",
+       "      <td>-0.990033</td>\n",
+       "      <td>8</td>\n",
+       "      <td>434.583333</td>\n",
+       "      <td>246.166667</td>\n",
+       "      <td>56.250000</td>\n",
+       "      <td>303.916667</td>\n",
+       "      <td>193.083333</td>\n",
+       "      <td>131.833333</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>40</td>\n",
+       "      <td>94387.2472</td>\n",
+       "      <td>3295445.781</td>\n",
+       "      <td>0.571676</td>\n",
+       "      <td>8.177277</td>\n",
+       "      <td>6.086994</td>\n",
+       "      <td>4.996416</td>\n",
+       "      <td>4.703273</td>\n",
+       "      <td>2.327391</td>\n",
+       "      <td>-0.393406</td>\n",
+       "      <td>0.317414</td>\n",
+       "      <td>-0.919365</td>\n",
+       "      <td>12</td>\n",
+       "      <td>434.583333</td>\n",
+       "      <td>246.166667</td>\n",
+       "      <td>56.250000</td>\n",
+       "      <td>303.916667</td>\n",
+       "      <td>193.083333</td>\n",
+       "      <td>131.833333</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>44</td>\n",
+       "      <td>96074.4400</td>\n",
+       "      <td>3295384.595</td>\n",
+       "      <td>0.599995</td>\n",
+       "      <td>7.776092</td>\n",
+       "      <td>4.100328</td>\n",
+       "      <td>2.452830</td>\n",
+       "      <td>4.214868</td>\n",
+       "      <td>2.780289</td>\n",
+       "      <td>0.974567</td>\n",
+       "      <td>0.308773</td>\n",
+       "      <td>-0.224095</td>\n",
+       "      <td>10</td>\n",
+       "      <td>436.250000</td>\n",
+       "      <td>246.083333</td>\n",
+       "      <td>56.333333</td>\n",
+       "      <td>303.333333</td>\n",
+       "      <td>193.083333</td>\n",
+       "      <td>131.750000</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>46</td>\n",
+       "      <td>96918.0291</td>\n",
+       "      <td>3295354.098</td>\n",
+       "      <td>0.645856</td>\n",
+       "      <td>6.104195</td>\n",
+       "      <td>6.105993</td>\n",
+       "      <td>5.745223</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>3.697116</td>\n",
+       "      <td>-0.121272</td>\n",
+       "      <td>0.290225</td>\n",
+       "      <td>0.992619</td>\n",
+       "      <td>12</td>\n",
+       "      <td>437.416667</td>\n",
+       "      <td>245.833333</td>\n",
+       "      <td>56.333333</td>\n",
+       "      <td>303.333333</td>\n",
+       "      <td>193.083333</td>\n",
+       "      <td>131.750000</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>74</td>\n",
+       "      <td>89367.3706</td>\n",
+       "      <td>3296767.165</td>\n",
+       "      <td>0.585960</td>\n",
+       "      <td>7.707360</td>\n",
+       "      <td>0.507525</td>\n",
+       "      <td>0.245173</td>\n",
+       "      <td>4.514750</td>\n",
+       "      <td>2.977758</td>\n",
+       "      <td>-0.910175</td>\n",
+       "      <td>0.193625</td>\n",
+       "      <td>-0.414224</td>\n",
+       "      <td>7</td>\n",
+       "      <td>429.583333</td>\n",
+       "      <td>246.750000</td>\n",
+       "      <td>56.250000</td>\n",
+       "      <td>305.000000</td>\n",
+       "      <td>193.166667</td>\n",
+       "      <td>132.000000</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   OID_           X            Y     Hurst       TWI    TPI300     TPI50  \\\n",
+       "0    39  93965.4461  3295461.117  0.658765  5.938030  2.100799  1.687004   \n",
+       "1    40  94387.2472  3295445.781  0.571676  8.177277  6.086994  4.996416   \n",
+       "2    44  96074.4400  3295384.595  0.599995  7.776092  4.100328  2.452830   \n",
+       "3    46  96918.0291  3295354.098  0.645856  6.104195  6.105993  5.745223   \n",
+       "4    74  89367.3706  3296767.165  0.585960  7.707360  0.507525  0.245173   \n",
+       "\n",
+       "        SPI     Slope        NS        DD        EW  Elv          pr  \\\n",
+       "0  0.000000  4.363049 -0.140835  0.317881 -0.990033    8  434.583333   \n",
+       "1  4.703273  2.327391 -0.393406  0.317414 -0.919365   12  434.583333   \n",
+       "2  4.214868  2.780289  0.974567  0.308773 -0.224095   10  436.250000   \n",
+       "3  0.000000  3.697116 -0.121272  0.290225  0.992619   12  437.416667   \n",
+       "4  4.514750  2.977758 -0.910175  0.193625 -0.414224    7  429.583333   \n",
+       "\n",
+       "           co        no2          o3        pm10         so2  Hurtz  \n",
+       "0  246.166667  56.250000  303.916667  193.083333  131.833333      0  \n",
+       "1  246.166667  56.250000  303.916667  193.083333  131.833333      0  \n",
+       "2  246.083333  56.333333  303.333333  193.083333  131.750000      0  \n",
+       "3  245.833333  56.333333  303.333333  193.083333  131.750000      0  \n",
+       "4  246.750000  56.250000  305.000000  193.166667  132.000000      0  "
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "dataset = pd.read_csv(r\"C:\\Users\\a.amanambu\\Desktop\\posting\\data_new.csv\")\n",
+    "\n",
+    "# divide data by dependent and features (predictor) variables\n",
+    "X_features = dataset.iloc[:,4:15].values\n",
+    "y_dependent = dataset.iloc[:, -1].values\n",
+    "\n",
+    "\n",
+    "#show the first 5 samples\n",
+    "dataset.head(5)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4adc8e5e",
+   "metadata": {},
+   "source": [
+    "# Splitting the dataset into the Training set and Test set"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "4f6123ba",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[[ 13.5307617 -12.168354  -14.0186119 ...  34.        420.9166667\n",
+      "  250.9166667]\n",
+      " [  6.7952623  -4.3285103   0.7942657 ...  42.        412.1666667\n",
+      "  258.       ]\n",
+      " [  8.5324831 -12.7477493   0.9043961 ...  77.        327.1666667\n",
+      "  269.0833333]\n",
+      " ...\n",
+      " [ 15.2237787 -28.8240509 -16.9965515 ... 148.        295.75\n",
+      "  280.3333333]\n",
+      " [  8.8472557 -33.5129623  -8.3799896 ...  65.        287.9166667\n",
+      "  284.5833333]\n",
+      " [  5.8950529   5.3778992  12.2637329 ... 307.        274.5833333\n",
+      "  420.75     ]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.model_selection import train_test_split\n",
+    "X_train, X_validate, y_train, y_validate = train_test_split(X_features, y_dependent, test_size = 0.25, random_state = 0)\n",
+    "print(X_train)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "649c4df4",
+   "metadata": {},
+   "source": [
+    "# Feature Scaling"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "fedcdf9b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.preprocessing import StandardScaler\n",
+    "sc = StandardScaler()\n",
+    "X_train = sc.fit_transform(X_train)\n",
+    "X_validate = sc.transform(X_validate)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0898dd44",
+   "metadata": {},
+   "source": [
+    "# Create a function that will collect or stack all models for an esemble model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "227b86d8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.linear_model import LogisticRegression\n",
+    "from sklearn.svm import SVC\n",
+    "from sklearn.naive_bayes import GaussianNB\n",
+    "from sklearn.ensemble import RandomForestClassifier\n",
+    "from sklearn.neighbors import KNeighborsClassifier\n",
+    "from sklearn.tree import DecisionTreeClassifier\n",
+    "from sklearn.ensemble import StackingClassifier\n",
+    "\n",
+    "# define a stacking esemble model\n",
+    "def stacked_esemble():\n",
+    "    \n",
+    "    #collate the models to evaluate\n",
+    "    model_to_stack = list()\n",
+    "    model_to_stack.append(('NB', GaussianNB()))\n",
+    "    model_to_stack.append(('KS', SVC(kernel = 'rbf')))\n",
+    "    model_to_stack.append(('RF', RandomForestClassifier(n_estimators = 10, criterion = 'entropy')))\n",
+    "    model_to_stack.append(('KN', KNeighborsClassifier(n_neighbors = 5, metric = 'minkowski', p = 2)))\n",
+    "    model_to_stack.append(('CT', DecisionTreeClassifier(criterion = 'entropy')))\n",
+    "    \n",
+    "    # define the most basic model that will learn the best way to combine all other models\n",
+    "    basic_model = GaussianNB()\n",
+    "    \n",
+    "    #create the the esemble model by stacking them\n",
+    "    esemble_model = StackingClassifier(model_to_stack, basic_model, cv = 5)\n",
+    "    return esemble_model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "29e838f7",
+   "metadata": {},
+   "source": [
+    "# Make a function a dictionary of all the classififers for model evaluation purpose"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "db75d4a3",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# define the list of models for predcition\n",
+    "\n",
+    "def list_classifiers():\n",
+    "    classifiers = dict()\n",
+    "    classifiers['NB'] = GaussianNB()\n",
+    "    classifiers['KS'] = SVC(kernel = 'rbf')\n",
+    "    classifiers['RF'] = RandomForestClassifier(n_estimators = 10, criterion = 'entropy')\n",
+    "    classifiers['KN'] = KNeighborsClassifier(n_neighbors = 5, metric = 'minkowski', p = 2)\n",
+    "    classifiers['CT'] = DecisionTreeClassifier(criterion = 'entropy')\n",
+    "    \n",
+    "    # define the stcking esemble models\n",
+    "    classifiers['EM'] = stacked_esemble()\n",
+    "    return classifiers"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d2aa6896",
+   "metadata": {},
+   "source": [
+    "# function to evaluate models using K-fold Cross validation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "f362c10c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from sklearn.model_selection import cross_val_score\n",
+    "from sklearn.model_selection import RepeatedKFold\n",
+    "# cv = RepeatedKFold(n_splits=10, n_repeats=10, random_state=1)\n",
+    "# accuracies = cross_val_score(classifier, X_train, y_train, cv = cv)\n",
+    "# print('Accuracy: {:.2f} %'.format(accuracies.mean()*100))\n",
+    "# print('standard deviation: {:.2f} %'.format(accuracies.std()*100))\n",
+    "\n",
+    "\n",
+    "def cross_evaluation(classifiers, X_train, y_train):\n",
+    "    accuracies = cross_val_score(classifier, X_train, y_train, cv = 5)\n",
+    "    return accuracies"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d7a6820a",
+   "metadata": {},
+   "source": [
+    "# Retreive the models that we need to evaluate from the classifier function"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b12a08a1",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      ">NB 0.790 (0.110)\n",
+      ">KS 0.907 (0.000)\n",
+      ">RF 0.906 (0.001)\n",
+      ">KN 0.900 (0.001)\n",
+      ">CT 0.836 (0.004)\n"
+     ]
+    }
+   ],
+   "source": [
+    "from numpy import mean, std\n",
+    "# retrieve the models itn an object\n",
+    "classifiers = list_classifiers()\n",
+    "\n",
+    "#create an empy lsit where all the results will be imported into\n",
+    "output, classifier_names = list(), list()\n",
+    "\n",
+    "# cross evalute the models with kfold cross validation\n",
+    "for classifier_name, classifier in classifiers.items():\n",
+    "    accuracies = cross_evaluation(classifier, X_train, y_train)\n",
+    "    output.append(accuracies)\n",
+    "    classifier_names.append(classifier_name)\n",
+    "    print('>%s %.3f (%.3f)' % (classifier_name, mean(accuracies), std(accuracies)))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f34451fe",
+   "metadata": {},
+   "source": [
+    "# Make a Box plot to campare"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "aef47ebf",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "from matplotlib import pyplot\n",
+    "pyplot.boxplot(output, labels = classifier_names, showmeans = True)\n",
+    "pyplot.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "76aa7a7d",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.13"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
