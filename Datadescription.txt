@@ -1,0 +1,20 @@
+Here is a descirption of the environmental varaibles used here
+
+to get most of the environmntal vatraibles please visit:
+
+https://planetarycomputer.microsoft.com/dataset/gridmet#:~:text=gridMET%20is%20a%20dataset%20of,%2C%20agricultural%2C%20and%20hydrological%20models.
+
+1.	Elevation (EL) which is the altitude above sea level as provided by the SRTM DEM
+2.	Slope (SL) was calculated as slope in degree.
+3.	Slope Aspect (NS,DD) 
+4.	Slope Length factor (LS)—sediment transport index—is the product of slope length (L) and steepness (S). 
+5.	Topographic Position Index (TPI), which is used to determine the ruggedness of terrain, is derived by comparing the altitude of each cell in a DEM to the mean elevation of a specified neighbourhood around that cell 
+6.	Topographic Wetness Index (TWI)
+7.	Stream Power Index (SPI) 
+8.	Distance from Stream (DS)
+9.	precipitation (pre)
+10.	initial values of Hurst exponent: Models were fitted for the vegetation persistence where anti-persistence (value between 0 and 0.5 and ≠ 0.5) and persistence (value ≥ 0.5) were coded as 0 and 1 respectively. The idea of the entire approach was not to predict Hurst exponent but to access its association with terrain attributes.
+
+ 
+
+  
